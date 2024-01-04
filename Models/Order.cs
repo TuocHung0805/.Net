@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace Store.Models
 {
-    public class Order
+    public class Order : BaseEntity
     {
-        [Key]
-        public Guid MaDH { get; set; }
-        public Guid MaKH { get; set; }
+        public Guid MaDH { get; set;}
         public DateTime NgayDat { get; set; }
+        public string HoVaTen { get; set; }
+        public string SDT { get; set; }
         public string DiaChi { get; set; }
-
-        //relationship
-        public Customer Customer { get; set; }
-        public ICollection<OrderDetail> OrderDetails { get; set; }
     }
+
 }

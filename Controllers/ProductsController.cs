@@ -6,6 +6,9 @@ using Store.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentValidation.Results;
+using FluentValidation;
+using Store.Services;
 
 namespace Store.Controllers
 {
@@ -14,10 +17,14 @@ namespace Store.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly MyDBContext _context;
+        private readonly IValidator<ProductVM> _productValidator;
+        private readonly ProductRepository _productRepository;
 
-        public ProductsController(MyDBContext context)
+        public ProductsController(MyDBContext context, IValidator<ProductVM> productValidator, ProductRepository productRepository)
         {
             _context = context;
+            _productValidator = productValidator;
+            _productRepository = productRepository;
         }
 
         [HttpGet]
@@ -25,23 +32,8 @@ namespace Store.Controllers
         {
             try
             {
-                var totalProducts = _context.Products.Count();
-                var totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
-
-                var ProductList = _context.Products
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                var result = new
-                {
-                    TotalPages = totalPages,
-                    CurrentPage = page,
-                    PageSize = pageSize,
-                    Products = ProductList
-                };
-
-                return Ok(result);
+                var data =_productRepository.GetAll(page, pageSize);
+                return Ok(data);
             }
             catch
             {
@@ -50,77 +42,89 @@ namespace Store.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Product product)
+        public IActionResult Create(ProductVM product)
         {
             try
             {
-                var _product = new Product
+                ValidationResult validationResult = _productValidator.Validate(product);
+                if (!validationResult.IsValid)
                 {
-                    MaSP= Guid.NewGuid(),
-                    TenSP = product.TenSP,
-                    DungLuong = product.DungLuong,
-                    MauSac = product.MauSac,
-                    Gia = product.Gia,
-                };
-                _context.Add(_product);
-                _context.SaveChanges();
-                return StatusCode(StatusCodes.Status201Created, _product);
+                    return BadRequest(validationResult.Errors);
+                }
+                return Ok(_productRepository.CreateNew(product));
             }
             catch
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [HttpGet("{id:guid}", Name = "GetProductById")]
         public IActionResult GetById(string id)
         {
-            var product = _context.Products.SingleOrDefault(p => p.MaSP == Guid.Parse(id));
-            if(product == null)
+            try
             {
+                var data = _productRepository.GetByID(id);
+                if(data != null)
+                {
+                    return Ok(data);
+                }
                 return NotFound();
             }
-            return Ok(product);
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteById(string id)
         {
-            var product = _context.Products.SingleOrDefault(p =>p.MaSP == Guid.Parse(id));
-            if(product == null)
+            try
             {
-                return NotFound();
+                _productRepository.DeleteByID(id);
+                return Ok();
             }
-            _context.Products.Remove(product);
-            _context.SaveChanges();
-            return Ok();
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateById(string id, Product product)
+        public IActionResult UpdateById(string id, Models.Product product)
         {
-            var _product = _context.Products.SingleOrDefault(p => p.MaSP == Guid.Parse(id));
-            if(_product == null)
+            if (id == null)
             {
-                return NotFound();
+                return BadRequest();
             }
-            _product.TenSP = product.TenSP;
-            _product.MauSac = product.MauSac;
-            _product.DungLuong = product.DungLuong;
-            _product.Gia = product.Gia;
-            _context.SaveChanges();
-            return Ok();
+            try
+            {
+                _productRepository.UpdateByID(product);
+                return Ok();
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpGet("{name}", Name = "GetProductByName")]
         public IActionResult GetByName(string name)
         {
-            var product = _context.Products.SingleOrDefault(p => p.TenSP == name);
-            if(product == null)
+            try
             {
+                var data = _productRepository.GetByName(name);
+                if (data != null)
+                {
+                    return Ok(data);
+                }
                 return NotFound();
             }
-            return Ok(product);
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
     }
 }

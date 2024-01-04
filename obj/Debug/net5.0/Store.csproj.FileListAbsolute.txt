@@ -63,3 +63,6 @@ D:\Studies\ASP .Net\New folder\Store\obj\Debug\net5.0\refint\Store.dll
 D:\Studies\ASP .Net\New folder\Store\obj\Debug\net5.0\Store.pdb
 D:\Studies\ASP .Net\New folder\Store\obj\Debug\net5.0\Store.genruntimeconfig.cache
 D:\Studies\ASP .Net\New folder\Store\obj\Debug\net5.0\ref\Store.dll
+D:\Studies\ASP .Net\New folder\Store\bin\Debug\net5.0\FluentValidation.dll
+D:\Studies\ASP .Net\New folder\Store\bin\Debug\net5.0\FluentValidation.AspNetCore.dll
+D:\Studies\ASP .Net\New folder\Store\bin\Debug\net5.0\FluentValidation.DependencyInjectionExtensions.dll
